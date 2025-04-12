@@ -25,6 +25,7 @@ class SignupView(APIView):
             token = get_tokens_for_user(user)
             response = Response({
                 "message": "User created successfully",
+                "token": token,
             }, status=201)
             response['Authentication'] = token
             return response
@@ -58,7 +59,10 @@ class EditView(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request):
-        serializer = UserEditRequestSerializer(request.user, data=request.data)
+        serializer = UserEditRequestSerializer(request.user, data={
+            "username": request.data.get("username"),
+            "description": request.data.get("description"),
+        })
         if serializer.is_valid():
             user = serializer.save()
             return Response({

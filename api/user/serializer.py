@@ -22,14 +22,12 @@ class UserSigninRequestSerializer(serializers.Serializer):
 class UserEditRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'password', 'description')
+        fields = ('username', 'description')
     def update(self, instance, validated_data):
-        instance.username = validated_data.get('username', instance.username)
-        if 'username' in validated_data:
+        if 'username' in validated_data and validated_data['username'] != instance.username:
             if User.objects.filter(username=validated_data['username']).exists():
                 raise serializers.ValidationError("Username already exists.")
-        if 'password' in validated_data:
-            instance.set_password(validated_data['password'])
+        instance.username = validated_data.get('username', instance.username)
         instance.description = validated_data.get('description', instance.description)
         instance.save()
         return instance
