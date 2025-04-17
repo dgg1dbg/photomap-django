@@ -48,7 +48,7 @@ class PostEditRequestSerializer(serializers.ModelSerializer):
             if isinstance(picture_data.get('file'), File):
                 Picture.objects.create_picture(post=instance, **picture_data)
             else:
-                picture_instance = Picture.objects.get(fileDir=picture_data.get('file'))
+                picture_instance = Picture.objects.get_by_url(picture_data.get('file'))
                 serializer = PictureEditRequestSerializer(picture_instance, data=picture_data)
                 if picture_instance.id in existing_picture_ids:
                     existing_picture_ids.remove(picture_instance.id)

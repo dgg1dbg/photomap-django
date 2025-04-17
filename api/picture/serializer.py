@@ -45,4 +45,4 @@ class PictureViewResponseSerializer(serializers.ModelSerializer):
     postId = serializers.IntegerField(source='post.id')
     class Meta:
         model = Picture
-        fields = ('fileDir', 'longitude', 'latitude', 'description', 'postId')
+        fields = ('file_id', 'longitude', 'latitude', 'description', 'postId')

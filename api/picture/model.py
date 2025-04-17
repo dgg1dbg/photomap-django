@@ -4,22 +4,21 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.files import File
 import uuid
+import redis
+from ..tasks.picture import compress_and_upload_image
+
+r = redis.StrictRedis(db=2)
 
 class PictureManager(models.Manager):
     def create_picture(self, file, longitude, latitude, description, post):
-        extension = os.path.splitext(file.name)[1]
-        unique_filename = f"{uuid.uuid4().hex}{extension}"
+        file_id = str(uuid.uuid4())
+        file_bytes = file.read()
+        r.set(file_id, file_bytes)
 
-        folder_path = os.path.join(settings.MEDIA_ROOT, 'pictures')
-        os.makedirs(folder_path, exist_ok=True)
+        for size in ['small', 'medium', 'large']:
+            compress_and_upload_image.delay(file_id, size)
 
-        file_path = os.path.join(folder_path, unique_filename)
-        with default_storage.open(file_path, 'wb+') as destination:
-            for chunk in file.chunks():
-                destination.write(chunk)
-
-        file_dir = os.path.join('pictures', unique_filename)
-        return self.create(fileDir=file_dir, longitude=longitude, latitude=latitude, description=description, post=post)
+        return self.create(file_id=file_id, longitude=longitude, latitude=latitude, description=description, post=post)
 
     def delete_picture(self, picture):
         file_path = os.path.join(settings.MEDIA_ROOT, picture.fileDir)
@@ -27,9 +26,15 @@ class PictureManager(models.Manager):
             os.remove(file_path)
         picture.delete()
 
+    def get_by_url(self, url):
+        filename = url.split('/')[-1]
+        base = filename.rsplit('.', 1)[0]
+        file_id = base.rsplit('_', 1)[0]
+        return self.get(file_id=file_id)
+
 class Picture(models.Model):
     objects = PictureManager()
-    fileDir = models.CharField(max_length=100)
+    file_id = models.CharField(max_length=100)
     longitude = models.FloatField()
     latitude = models.FloatField()
     description = models.TextField()
