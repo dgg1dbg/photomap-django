@@ -5,9 +5,9 @@ from django.core.files.storage import default_storage
 from django.core.files import File
 import uuid
 import redis
-from ..tasks.picture import compress_and_upload_image
+from ..tasks.picture import compress_and_upload_image, delete_picture
 
-r = redis.StrictRedis(db=2)
+r = redis.StrictRedis(host='redis', port=6379, db=2)
 
 class PictureManager(models.Manager):
     def create_picture(self, file, longitude, latitude, description, post):
@@ -21,9 +21,7 @@ class PictureManager(models.Manager):
         return self.create(file_id=file_id, longitude=longitude, latitude=latitude, description=description, post=post)
 
     def delete_picture(self, picture):
-        file_path = os.path.join(settings.MEDIA_ROOT, picture.fileDir)
-        if os.path.exists(file_path):
-            os.remove(file_path)
+        delete_picture.delay(picture.file_id)
         picture.delete()
 
     def get_by_url(self, url):

@@ -5,12 +5,13 @@ import boto3
 from PIL import Image
 from django.conf import settings
 
-r = redis.StrictRedis(db=2)
+r = redis.StrictRedis(host='redis', port=6379, db=2)
+
 
 TARGET_WIDTHS = {
     'small': 150,
-    'medium': 720,
-    'large': 1920
+    'medium': 3000,
+    'large': 6000
 }
 
 def resize_keep_aspect(image, target_width):
@@ -25,7 +26,6 @@ def compress_and_upload_image(image_key, size):
     image_data = r.get(image_key)
     if image_data is None:
         return
-
     image = Image.open(io.BytesIO(image_data))
 
     resized = resize_keep_aspect(image, TARGET_WIDTHS[size])
@@ -37,7 +37,7 @@ def compress_and_upload_image(image_key, size):
     s3_client = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
                              aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
     s3_client.upload_fileobj(buffer, 
-                             settings.AWS_STORAGE_BUCKET_NAME, 
+                             settings.AWS_BUCKET_NAME, 
                              f'compressed/{image_key}_{size}.jpg',
                              ExtraArgs={'ContentType': 'image/jpeg'}
                              )
@@ -47,3 +47,11 @@ def compress_and_upload_image(image_key, size):
     if count == 3:
         r.delete(done_key)
         r.delete(image_key)
+
+
+@shared_task
+def delete_picture(picture_id):
+    s3_client = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
+    for size in TARGET_WIDTHS.keys():
+        s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=f'compressed/{picture_id}_{size}.jpg')
