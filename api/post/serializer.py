@@ -68,6 +68,7 @@ class PostEditRequestSerializer(serializers.ModelSerializer):
 
 
 class PostViewResponseSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     name = serializers.CharField(required=False, allow_blank=True)
     description = serializers.CharField(required=False, allow_blank=True)
     date = serializers.DateField(required=False, allow_null=True)
