@@ -6,6 +6,15 @@ ENV PYTHONUNBUFFERED 1
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y \
+    gdal-bin \
+    libgdal-dev \
+    proj-bin \
+    libproj-dev \
+    build-essential \
+    gcc \
+    python3-dev \
+ && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 

@@ -10,3 +10,4 @@ celery==5.5.1
 pillow==11.2.1
 redis==5.2.1
 locust==1.0.3
+django[gis]
