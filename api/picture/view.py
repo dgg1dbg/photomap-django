@@ -8,6 +8,8 @@ from rest_framework.permissions import AllowAny
 from photomap.auth import NoAuthentication
 from django.conf import settings
 import os
+from django.core.cache import cache
+from .cache import get_grid_keys, get_cached_grid_data
 
 class ViewView(APIView):
     authentication_classes = [NoAuthentication]
@@ -21,9 +23,11 @@ class ViewView(APIView):
             serializer = PictureViewResponseSerializer(picture)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            pictures = Picture.objects.all()
-            serializer = PictureViewResponseSerializer(pictures, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            grid_keys = get_grid_keys(request)
+            results = []
+            for grid_key in grid_keys:
+                results.extend(get_cached_grid_data(grid_key))
+            return Response(results, status=status.HTTP_200_OK)
     
 class FileView(APIView):
     authentication_classes = [NoAuthentication]

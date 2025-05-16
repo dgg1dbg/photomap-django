@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .model import Picture
 from api.post.model import Post
 from django.contrib.gis.geos import Point
+from .cache import get_grid_key_from_point
+from django.core.cache import cache
 
 class FileOrPathField(serializers.Field):
     def to_internal_value(self, data):
@@ -41,6 +43,11 @@ class PictureEditRequestSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         point = Point(validated_data.get('longitude'), validated_data.get('latitude'))
+        if instance.location != point:
+            old_grid_key = get_grid_key_from_point(instance.location)
+            new_grid_key = get_grid_key_from_point(point)
+            cache.delete(old_grid_key)
+            cache.delete(new_grid_key)
         instance.location = point
         instance.description = validated_data.get('description', instance.description)
         instance.save()

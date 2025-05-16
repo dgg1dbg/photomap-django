@@ -8,6 +8,8 @@ import redis
 from ..tasks.picture import compress_and_upload_image, delete_picture
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.geos import Point
+from django.core.cache import cache
+from .cache import get_grid_key_from_point
 
 r = redis.StrictRedis(host='redis', port=6379, db=2)
 
@@ -21,10 +23,13 @@ class PictureManager(models.Manager):
             compress_and_upload_image.delay(file_id, size)
 
         location = Point(longitude, latitude)
-
+        grid_key = get_grid_key_from_point(location)
+        cache.delete(grid_key)
         return self.create(file_id=file_id, location=location, description=description, post=post)
 
     def delete_picture(self, picture):
+        grid_key = get_grid_key_from_point(picture.location)
+        cache.delete(grid_key)
         delete_picture.delay(picture.file_id)
         picture.delete()
 
