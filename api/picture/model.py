@@ -6,6 +6,8 @@ from django.core.files import File
 import uuid
 import redis
 from ..tasks.picture import compress_and_upload_image, delete_picture
+from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.geos import Point
 
 r = redis.StrictRedis(host='redis', port=6379, db=2)
 
@@ -18,7 +20,9 @@ class PictureManager(models.Manager):
         for size in ['small', 'medium', 'large']:
             compress_and_upload_image.delay(file_id, size)
 
-        return self.create(file_id=file_id, longitude=longitude, latitude=latitude, description=description, post=post)
+        location = Point(longitude, latitude)
+
+        return self.create(file_id=file_id, location=location, description=description, post=post)
 
     def delete_picture(self, picture):
         delete_picture.delay(picture.file_id)
@@ -33,7 +37,6 @@ class PictureManager(models.Manager):
 class Picture(models.Model):
     objects = PictureManager()
     file_id = models.CharField(max_length=100)
-    longitude = models.FloatField()
-    latitude = models.FloatField()
+    location = gis_models.PointField(spatial_index=True)
     description = models.TextField()
     post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='pictures')

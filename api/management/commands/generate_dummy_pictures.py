@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from ...post.model import Post
 from ...picture.model import Picture
 import random
+from django.contrib.gis.geos import Point
 
 
 class Command(BaseCommand):
@@ -28,10 +29,10 @@ class Command(BaseCommand):
             post = random.choice(posts)
             longitude = random.uniform(124, 129)
             latitude = random.uniform(33, 38)
+            location = Point(longitude, latitude)
             picture = Picture(
                 file_id=f"dummy_file_id_{i}",
-                longitude=longitude,
-                latitude=latitude,
+                location=location,
                 description="Dummy description",
                 post=post,
             )

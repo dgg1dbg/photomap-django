@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .model import Picture
 from api.post.model import Post
+from django.contrib.gis.geos import Point
 
 class FileOrPathField(serializers.Field):
     def to_internal_value(self, data):
@@ -17,6 +18,8 @@ class FileOrPathField(serializers.Field):
 
 class PictureCreateRequestSerializer(serializers.ModelSerializer):
     file = serializers.FileField(required=True)
+    longitude = serializers.FloatField(required=True)
+    latitude = serializers.FloatField(required=True)
     class Meta:
         model = Picture
         fields = ('longitude', 'latitude', 'description', 'file')
@@ -24,6 +27,8 @@ class PictureCreateRequestSerializer(serializers.ModelSerializer):
 
 class PictureEditRequestSerializer(serializers.ModelSerializer):
     file = FileOrPathField(required=True)
+    longitude = serializers.FloatField(required=True)
+    latitude = serializers.FloatField(required=True)
     class Meta:
         model = Picture
         fields = ('longitude', 'latitude', 'description', 'file')
@@ -35,14 +40,20 @@ class PictureEditRequestSerializer(serializers.ModelSerializer):
         return data
     
     def update(self, instance, validated_data):
-        instance.longitude = validated_data.get('longitude', instance.longitude)
-        instance.latitude = validated_data.get('latitude', instance.latitude)
+        point = Point(validated_data.get('longitude'), validated_data.get('latitude'))
+        instance.location = point
         instance.description = validated_data.get('description', instance.description)
         instance.save()
         return instance
     
 class PictureViewResponseSerializer(serializers.ModelSerializer):
     postId = serializers.IntegerField(source='post.id')
+    longitude = serializers.SerializerMethodField()
+    latitude = serializers.SerializerMethodField()
+    def get_longitude(self, obj):
+        return obj.location.x
+    def get_latitude(self, obj):
+        return obj.location.y
     class Meta:
         model = Picture
         fields = ('file_id', 'longitude', 'latitude', 'description', 'postId')
