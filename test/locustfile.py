@@ -1,10 +1,9 @@
 import time
-from locust import HttpUser, task, between
+from locust import HttpUser, task, constant
 
 class MainMapUser(HttpUser):
-    wait_time = between(1, 5)
+    wait_time = constant(0)
 
     @task
     def load_main_map(self):
         self.client.get("/")
-        time.sleep(1)
