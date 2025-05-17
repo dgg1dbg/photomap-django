@@ -3,8 +3,9 @@ from django.contrib.gis.geos import Polygon
 import math
 from django.core.cache import cache
 
-GRID_SIZE = 0.1
+GRID_SIZE = 0.5
 MAX_GRID_PICTURES = 20
+MAX_GRID_COUNT = 1000
 
 def get_grid_keys(request):
     west = float(request.GET.get('west'))
@@ -17,12 +18,23 @@ def get_grid_keys(request):
     min_y = math.floor(south / GRID_SIZE)
     max_y = math.floor(north / GRID_SIZE)
 
-    grid_keys = []
-    for x in range(min_x, max_x + 1):
-        for y in range(min_y, max_y + 1):
-            grid_keys.append(f"grid:{x}:{y}")
+    width = max_x - min_x + 1
+    height = max_y - min_y + 1
+    total = width * height
 
-    return grid_keys
+    if total <= MAX_GRID_COUNT:
+        grid_coords = [(x, y) for x in range(min_x, max_x + 1) for y in range(min_y, max_y + 1)]
+    else:
+        center_x = (min_x + max_x) // 2
+        center_y = (min_y + max_y) // 2
+
+        all_coords = [
+            (x, y) for x in range(min_x, max_x + 1) for y in range(min_y, max_y + 1)
+        ]
+        all_coords.sort(key=lambda coord: abs(coord[0] - center_x) + abs(coord[1] - center_y))
+        grid_coords = all_coords[:MAX_GRID_COUNT]
+
+    return [f"grid:{x}:{y}" for x, y in grid_coords]
 
 def get_grid_pictures(grid_key):
     from .model import Picture
