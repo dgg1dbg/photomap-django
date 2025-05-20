@@ -5,5 +5,6 @@ urlpatterns = [
     path('user/', include('api.user.url')),
     path('post/', include('api.post.url')),
     path('picture', include('api.picture.url')),
-    path('hashtag/', include('api.hashtag.url'))
+    path('hashtag/', include('api.hashtag.url')),
+    path('place/', include('api.place.url')),
 ]
