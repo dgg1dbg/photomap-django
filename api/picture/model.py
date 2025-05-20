@@ -43,5 +43,5 @@ class Picture(models.Model):
     objects = PictureManager()
     file_id = models.CharField(max_length=100)
     location = gis_models.PointField(spatial_index=True)
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='pictures')

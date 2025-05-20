@@ -22,6 +22,7 @@ class PictureCreateRequestSerializer(serializers.ModelSerializer):
     file = serializers.FileField(required=True)
     longitude = serializers.FloatField(required=True)
     latitude = serializers.FloatField(required=True)
+    description = serializers.CharField(required=False, allow_blank=True)
     class Meta:
         model = Picture
         fields = ('longitude', 'latitude', 'description', 'file')
@@ -31,6 +32,7 @@ class PictureEditRequestSerializer(serializers.ModelSerializer):
     file = FileOrPathField(required=True)
     longitude = serializers.FloatField(required=True)
     latitude = serializers.FloatField(required=True)
+    description = serializers.CharField(required=False, allow_blank=True)
     class Meta:
         model = Picture
         fields = ('longitude', 'latitude', 'description', 'file')
@@ -57,6 +59,7 @@ class PictureViewResponseSerializer(serializers.ModelSerializer):
     postId = serializers.IntegerField(source='post.id')
     longitude = serializers.SerializerMethodField()
     latitude = serializers.SerializerMethodField()
+    description = serializers.CharField(required=False, allow_blank=True)
     def get_longitude(self, obj):
         return obj.location.x
     def get_latitude(self, obj):
