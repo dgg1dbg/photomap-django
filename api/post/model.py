@@ -10,6 +10,7 @@ class Post(models.Model):
     description = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     hashtags = models.ManyToManyField('Hashtag', related_name='posts')
+    place = models.CharField(max_length=100)
 
     def delete(self, *args, **kwargs):
         for picture in self.pictures.all():

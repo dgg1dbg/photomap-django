@@ -11,7 +11,7 @@ class PostCreateRequestSerializer(serializers.ModelSerializer):
     hashtags = serializers.CharField(required=False, allow_blank=True)
     class Meta:
         model = Post
-        fields = ('name', 'date', 'time', 'description', 'pictures', 'hashtags')
+        fields = ('name', 'date', 'time', 'description', 'pictures', 'hashtags', 'place')
 
     def create(self, validated_data):
         pictures_data = validated_data.pop('pictures', [])
@@ -33,7 +33,7 @@ class PostEditRequestSerializer(serializers.ModelSerializer):
     hashtags = serializers.CharField(required=False, allow_blank=True)
     class Meta:
         model = Post
-        fields = ('name', 'date', 'time', 'description', 'pictures', 'hashtags')
+        fields = ('name', 'date', 'time', 'description', 'pictures', 'hashtags', 'place')
     def update(self, instance, validated_data):
         pictures_data = validated_data.pop('pictures', [])
         hashtag_str = validated_data.pop('hashtags', '')
@@ -42,6 +42,7 @@ class PostEditRequestSerializer(serializers.ModelSerializer):
         instance.date = validated_data.get('date', instance.date)
         instance.time = validated_data.get('time', instance.time)
         instance.description = validated_data.get('description', instance.description)
+        instance.place = validated_data.get('place', instance.place)
         instance.save()
         existing_picture_ids = set(p.id for p in instance.pictures.all())
         for picture_data in pictures_data:
@@ -76,6 +77,7 @@ class PostViewResponseSerializer(serializers.Serializer):
     user = serializers.CharField(source='user.username')
     hashtag = serializers.SerializerMethodField()
     pictures = PictureViewResponseSerializer(many=True, required=False, allow_null=True)
+    place = serializers.CharField(required=False, allow_blank=True)
 
     def get_hashtag(self, obj):
         return ''.join([f"#{tag.name}" for tag in obj.hashtags.all()])

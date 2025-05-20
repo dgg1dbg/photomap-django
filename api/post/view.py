@@ -31,7 +31,8 @@ class CreateView(APIView):
             "time": request.data.get('time'),
             "description": request.data.get('description'),
             "pictures": picture_list,
-            "hashtags": request.data.get('hashtag')
+            "hashtags": request.data.get('hashtag'),
+            "place": request.data.get('place')
         },
             context={'request': request})
         if serializer.is_valid():
@@ -72,7 +73,8 @@ class EditView(APIView):
             "time": request.data.get('time'),
             "description": request.data.get('description'),
             "pictures": picture_list,
-            "hashtags": request.data.get('hashtag')
+            "hashtags": request.data.get('hashtag'),
+            "place": request.data.get('place')
         },
             context={'request': request})
         if serializer.is_valid():
